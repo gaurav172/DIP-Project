@@ -241,24 +241,30 @@ if Q == 2
 %     end
     dc1 = repmat(corr(1,:), [3,1]);
     dc2 = repmat(corr(2,:), [3,1]);   
-    nc1 = alpha'*E(:,:,1)';
-    nc2 = alpha'*E(:,:,2)';
-    nc3 = alpha'*E(:,:,3)';
+    nc1 = E(:,:,1)';
+    nc2 = E(:,:,2)';
+    nc3 = E(:,:,3)';
 %     MR1 = (alpha'*E(:,:,1))'.*repmat(corr(1,:), [3 1]);
 %     MR2 = (alpha'*E(:,:,1))'.*repmat(corr(2,:), [3 1]);
+    size(nc1)
+    size(dc1)
+    size(E(:,:,1))
     MR1 = nc1.*dc1;
     MR2 = nc1.*dc2;
-
+    MR1 = alpha'*MR1;
+    MR2 = alpha'*MR2;
 %     MG1 = (alpha'*E(:,:,2))'.*repmat(corr(1,:), [3 1]);
 %     MG2 = (alpha'*E(:,:,2))'.*repmat(corr(2,:), [3 1]);
     MG1 = nc2.*dc1;
     MG2 = nc2.*dc2;
-
+    MG1 = alpha'*MG1;
+    MG2 = alpha'*MG2;
 %     MB1 = (alpha'*E(:,:,3))'.*repmat(corr(1,:), [3 1]);
 %     MB2 = (alpha'*E(:,:,3))'.*repmat(corr(2,:), [3 1]);
     MB1 = nc3.*dc1;
     MB2 = nc3.*dc2;
-    
+    MB1 = alpha'*MR1;
+    MB2 = alpha'*MR2;
     b= [MR1' MR2'; MG1' MG2'; MB1' MB2']\(reshape(img_nf_vec', [], 1));
     illum_1 = b(1:3);
     illum_2 = b(4:6);
