@@ -283,34 +283,43 @@ if Q == 2
 else 
     [illum1, illum2, illum3] = est_three_light_coeff(gamma, mask_t, cfactor);
     L_mat = [illum1 illum2 illum3];
-    Illum = [illum1,illum2,illum3];
     coeff = .5*ones(Q, size(gamma, 2));
 
     coeff(:, mask > 0) = L_mat\gamma(:, mask > 0);
     
     illum1 = L_mat(:, 1); illum2 = L_mat(:, 2); illum3 = L_mat(:, 3);
-    mR1 = (alpha'*E(:,:,1)*illum1)'.*(beta_norm./(1e-10+norm_alpha));
-    mR2 = (alpha'*E(:,:,1)*illum2)'.*(beta_norm./(1e-10+norm_alpha));
-    mR3 = (alpha'*E(:,:,1)*illum3)'.*(beta_norm./(1e-10+norm_alpha));
+    Illum = [illum1,illum2,illum3];
     
-    mG1 = (alpha'*E(:,:,2)*illum1)'.*(beta_norm./(1e-10+norm_alpha));
-    mG2 = (alpha'*E(:,:,2)*illum2)'.*(beta_norm./(1e-10+norm_alpha));
-    mG3 = (alpha'*E(:,:,2)*illum3)'.*(beta_norm./(1e-10+norm_alpha));
-    
-    mB1 = (alpha'*E(:,:,3)*illum1)'.*(beta_norm./(1e-10+norm_alpha));
-    mB2 = (alpha'*E(:,:,3)*illum2)'.*(beta_norm./(1e-10+norm_alpha));
-    mB3 = (alpha'*E(:,:,3)*illum3)'.*(beta_norm./(1e-10+norm_alpha));
+    for i=1:3
+        mR(i,:) = (alpha'*E(:,:,1)*Illum(:,i))'.*(beta_norm./(1e-10+norm_alpha));
+    end
+%     mR1 = (alpha'*E(:,:,1)*Illum(:,1))'.*(beta_norm./(1e-10+norm_alpha));
+%     mR2 = (alpha'*E(:,:,1)*Illum(:,2))'.*(beta_norm./(1e-10+norm_alpha));
+%     mR3 = (alpha'*E(:,:,1)*Illum(:,3))'.*(beta_norm./(1e-10+norm_alpha));
+
+    for i=1:3
+        mG(i,:) = (alpha'*E(:,:,2)*Illum(:,i))'.*(beta_norm./(1e-10+norm_alpha));
+    end
+%     mG1 = (alpha'*E(:,:,2)*Illum(:,1))'.*(beta_norm./(1e-10+norm_alpha));
+%     mG2 = (alpha'*E(:,:,2)*Illum(:,2))'.*(beta_norm./(1e-10+norm_alpha));
+%     mG3 = (alpha'*E(:,:,2)*Illum(:,3))'.*(beta_norm./(1e-10+norm_alpha));
+    for i=1:3
+        mB(i,:) = (alpha'*E(:,:,3)*Illum(:,i))'.*(beta_norm./(1e-10+norm_alpha));
+    end
+%     mB1 = (alpha'*E(:,:,3)*Illum(:,1))'.*(beta_norm./(1e-10+norm_alpha));
+%     mB2 = (alpha'*E(:,:,3)*Illum(:,2))'.*(beta_norm./(1e-10+norm_alpha));
+%     mB3 = (alpha'*E(:,:,3)*Illum(:,3))'.*(beta_norm./(1e-10+norm_alpha));
     
     for kk = 1:size(img_nf_vec,2)
-        Amat_ = [mR1(kk) mR2(kk) mR3(kk); mG1(kk) mG2(kk) mG3(kk); mB1(kk) mB2(kk) mB3(kk)];
+        Amat_ = [mR(1,kk) mR(2,kk) mR(3,kk); mG(1,kk) mG(2,kk) mG(3,kk); mB(1,kk) mB(2,kk) mB(3,kk)];
         bvec_ = img_nf_vec(:, kk);
         coeff(:, kk) = Amat_\bvec_;
     end    
         
     %%
-    corr1 = coeff(1, :).*beta_norm./(1e-10+norm_alpha);
-    corr2 = coeff(2, :).*beta_norm./(1e-10+norm_alpha);
-    corr3 = coeff(3, :).*beta_norm./(1e-10+norm_alpha);
+%     corr1 = coeff(1, :).*beta_norm./(1e-10+norm_alpha);
+%     corr2 = coeff(2, :).*beta_norm./(1e-10+norm_alpha);
+%     corr3 = coeff(3, :).*beta_norm./(1e-10+norm_alpha);
     for i=1:3
         corr(i,:) = coeff(i,:).*beta_norm./(1e-10+norm_alpha);
     end
@@ -336,30 +345,24 @@ else
     illum_3 = illum_3/norm(illum_3);
     
     im1_new = [];
-    im1_new(1, :) = (alpha'*E(:,:,1)*illum_1)'.*corr1;
-    im1_new(2, :) = (alpha'*E(:,:,2)*illum_1)'.*corr1;
-    im1_new(3, :) = (alpha'*E(:,:,3)*illum_1)'.*corr1;
-%     for kk=1:3
-%         im1_new(kk, :) = (alpha'*E(:,:,kk)*illum_1)'.*corr1;
-%     end
+    im1_new(1, :) = (alpha'*E(:,:,1)*illum_1)'.*corr(1,:);
+    im1_new(2, :) = (alpha'*E(:,:,2)*illum_1)'.*corr(1,:);
+    im1_new(3, :) = (alpha'*E(:,:,3)*illum_1)'.*corr(1,:);
+
     im1_new = reshape(im1_new', size(im_nf));
 
     im2_new = [];
-    im2_new(1, :) = (alpha'*E(:,:,1)*illum_2)'.*corr2;
-    im2_new(2, :) = (alpha'*E(:,:,2)*illum_2)'.*corr2;
-    im2_new(3, :) = (alpha'*E(:,:,3)*illum_2)'.*corr2;
-%     for kk=1:3
-%         im2_new(kk, :) = (alpha'*E(:,:,kk)*illum_2)'.*corr2;
-%     end
+    im2_new(1, :) = (alpha'*E(:,:,1)*illum_2)'.*corr(2,:);
+    im2_new(2, :) = (alpha'*E(:,:,2)*illum_2)'.*corr(2,:);
+    im2_new(3, :) = (alpha'*E(:,:,3)*illum_2)'.*corr(2,:);
+
     im2_new = reshape(im2_new', size(im_nf));
 
     im3_new = [];
-    im3_new(1, :) = (alpha'*E(:,:,1)*illum_3)'.*corr3
-    im3_new(2, :) = (alpha'*E(:,:,2)*illum_3)'.*corr3
-    im3_new(3, :) = (alpha'*E(:,:,3)*illum_3)'.*corr3
-%     for kk=1:3
-%         im3_new(kk, :) = (alpha'*E(:,:,kk)*illum_3)'.*corr3;
-%     end
+    im3_new(1, :) = (alpha'*E(:,:,1)*illum_3)'.*corr(3,:);
+    im3_new(2, :) = (alpha'*E(:,:,2)*illum_3)'.*corr(3,:);
+    im3_new(3, :) = (alpha'*E(:,:,3)*illum_3)'.*corr(3,:);
+
     im3_new = reshape(im3_new', size(im_nf));
     
     results.im1 = im1_new;
