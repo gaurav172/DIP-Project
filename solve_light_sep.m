@@ -42,49 +42,25 @@ function results = solve_light_sep(im_nf, im_f, mask, opt)
 
 %% initialize the variables
 pMask = mask;
-% if ~isfield(opt, 'pMask')
-%     pMask = mask;
-% else
 if isfield(opt,'pMask')
     pMask = opt.pMask;
 end
 
-% if ~isfield(opt, 'lambda')
 lambda = 1e-3;
-% else
 if isfield(opt,'lambda')
     lambda = opt.lambda;
 end
 
 cfactor = 1;
-
-% if ~isfield(opt, 'cutoff')
-%     cfactor = 1;
-% else
 if isfield(opt,'cutoff')
     cfactor = opt.cutoff;
 end
 
-% if ~isfield(opt, 'E')
-%     error('Not found E matrix')
-%     return
-% else
 E = opt.E;
-% end
 
-% if ~isfield(opt, 'f')
-%     error('Not found flash coefficients')
-%     return
-% else
 f = opt.f;
-% end
 
-% if ~isfield(opt, 'light_number')
-%     error('Please specificy the number of lights in the scene')
-%     return
-% else
 Q = opt.light_number;
-% end
 
 siz = size(im_nf);
 
@@ -93,14 +69,11 @@ D_img = im_f - im_nf;
 D_img(D_img<0) = 0;
 Temp_Mat = repmat(mask,[1 1 3]);
 diff_img = D_img.*Temp_Mat;
-% Diff_img = max(im_f - im_nf, 0).*repmat(mask,[1 1 3]);
-% diff_img = diff_img/1000;
+
 for i=1:3
     Amat(:,i) = E(:,:,i)*f;
 end
-% Amat(:, 1) = E(:,:,1)*f;
-% Amat(:, 2) = E(:,:,2)*f;
-% Amat(:, 3) = E(:,:,3)*f;
+
 
 diff_img_vec = reshape(diff_img, [], 3);
 diff_img_vec = diff_img_vec';
@@ -113,7 +86,6 @@ alpha = alpha\diff_img_vec;
 
 if ~isfield(opt, 'shadow_mask')
     alpha = shadowRM(im_nf, im_f, mask, reshape(alpha', siz), opt.shadow_mask)';
-%     alpha = alpha';
 end
 
 trp = alpha';
@@ -134,9 +106,6 @@ for kk = 1:size(diff_img_vec, 2)
         for i=1:3
             Bmat(i,:) = alpha(:,kk)'*E(:,:, i);
         end
-%         Bmat(1, :) = alpha(:, kk)'*E(:,:, 1);
-%         Bmat(2, :) = alpha(:, kk)'*E(:,:, 2);
-%         Bmat(3, :) = alpha(:, kk)'*E(:,:, 3);
         Bmat = Bmat/(1e-10+norm_alpha(kk));
         
         
@@ -147,10 +116,8 @@ for kk = 1:size(diff_img_vec, 2)
         z = 0;
         if ~pMask(kk)
             z = 5;
-%             beta(:, kk) = (Bmat'*Bmat+5*lambda*eye(3))\(Bmat'*nf_intensity);
         else
             z = 1;
-%             beta(:, kk) = (Bmat'*Bmat+5*lambda*eye(3))\(Bmat'*nf_intensity);
         end
         beta(:,kk) = (num_1+z*num_2)\deno;
         if sum(isnan(beta(:, kk)))
@@ -171,14 +138,10 @@ im_nf_t = im_nf;
 im_nf_t = im_nf_t.*repmat(mask, [1 1 3]);
 s_img = reshape(beta', siz);
 smoothness = 0.0000001; %0.0001;%
-% for i = 1:3
-%     s_img(:,:,i) = imguidedfilter(s_img(:,:,i), im_nf_t, 'DegreeOfSmoothing', smoothness*diff(getrangefromclass(im_nf)).^2);
-% end
 s_img(:,:,1) = imguidedfilter(s_img(:,:,1), im_nf_t, 'DegreeOfSmoothing', smoothness*diff(getrangefromclass(im_nf)).^2);
 s_img(:,:,2) = imguidedfilter(s_img(:,:,2), im_nf_t, 'DegreeOfSmoothing', smoothness*diff(getrangefromclass(im_nf)).^2);
 s_img(:,:,3) = imguidedfilter(s_img(:,:,3), im_nf_t, 'DegreeOfSmoothing', smoothness*diff(getrangefromclass(im_nf)).^2);
 s_img = reshape(s_img, [], 3)';
-% s_img = s_img';
 sums = sum(s_img.^2,1);
 sqsum = sqrt(sums);
 beta_norm = sqsum;
@@ -293,22 +256,16 @@ else
     for i=1:3
         mR(i,:) = (alpha'*E(:,:,1)*Illum(:,i))'.*(beta_norm./(1e-10+norm_alpha));
     end
-%     mR1 = (alpha'*E(:,:,1)*Illum(:,1))'.*(beta_norm./(1e-10+norm_alpha));
-%     mR2 = (alpha'*E(:,:,1)*Illum(:,2))'.*(beta_norm./(1e-10+norm_alpha));
-%     mR3 = (alpha'*E(:,:,1)*Illum(:,3))'.*(beta_norm./(1e-10+norm_alpha));
+
 
     for i=1:3
         mG(i,:) = (alpha'*E(:,:,2)*Illum(:,i))'.*(beta_norm./(1e-10+norm_alpha));
     end
-%     mG1 = (alpha'*E(:,:,2)*Illum(:,1))'.*(beta_norm./(1e-10+norm_alpha));
-%     mG2 = (alpha'*E(:,:,2)*Illum(:,2))'.*(beta_norm./(1e-10+norm_alpha));
-%     mG3 = (alpha'*E(:,:,2)*Illum(:,3))'.*(beta_norm./(1e-10+norm_alpha));
+
     for i=1:3
         mB(i,:) = (alpha'*E(:,:,3)*Illum(:,i))'.*(beta_norm./(1e-10+norm_alpha));
     end
-%     mB1 = (alpha'*E(:,:,3)*Illum(:,1))'.*(beta_norm./(1e-10+norm_alpha));
-%     mB2 = (alpha'*E(:,:,3)*Illum(:,2))'.*(beta_norm./(1e-10+norm_alpha));
-%     mB3 = (alpha'*E(:,:,3)*Illum(:,3))'.*(beta_norm./(1e-10+norm_alpha));
+
     
     for kk = 1:size(img_nf_vec,2)
         Amat_ = [mR(1,kk) mR(2,kk) mR(3,kk); mG(1,kk) mG(2,kk) mG(3,kk); mB(1,kk) mB(2,kk) mB(3,kk)];
@@ -316,52 +273,56 @@ else
         coeff(:, kk) = Amat_\bvec_;
     end    
         
-    %%
-%     corr1 = coeff(1, :).*beta_norm./(1e-10+norm_alpha);
-%     corr2 = coeff(2, :).*beta_norm./(1e-10+norm_alpha);
-%     corr3 = coeff(3, :).*beta_norm./(1e-10+norm_alpha);
+
     for i=1:3
         corr(i,:) = coeff(i,:).*beta_norm./(1e-10+norm_alpha);
     end
-    MR1 = (alpha'*E(:,:,1))'.*repmat(corr(1,:), [3 1]);
-    MR2 = (alpha'*E(:,:,1))'.*repmat(corr(2,:), [3 1]);
-    MR3 = (alpha'*E(:,:,1))'.*repmat(corr(3,:), [3 1]);
+    %%
+    nc1 = (alpha'*E(:,:,1))';
+    nc2 = (alpha'*E(:,:,2))';
+    nc3 = (alpha'*E(:,:,3))';
     
-    MG1 = (alpha'*E(:,:,2))'.*repmat(corr(1,:), [3 1]);
-    MG2 = (alpha'*E(:,:,2))'.*repmat(corr(2,:), [3 1]);
-    MG3 = (alpha'*E(:,:,2))'.*repmat(corr(3,:), [3 1]);
+    ncc1 = repmat(corr(1,:), [3 1]);
+    ncc2 = repmat(corr(2,:), [3 1]);
+    ncc3 = repmat(corr(3,:), [3 1]);
     
-    MB1 = (alpha'*E(:,:,3))'.*repmat(corr(1,:), [3 1]);
-    MB2 = (alpha'*E(:,:,3))'.*repmat(corr(2,:), [3 1]);
-    MB3 = (alpha'*E(:,:,3))'.*repmat(corr(3,:), [3 1]);
+    MR1 = nc1.*ncc1;
+    MR2 = nc1.*ncc2;
+    MR3 = nc1.*ncc3;
+    
+    MG1 = nc2.*ncc1;
+    MG2 = nc2.*ncc2;
+    MG3 = nc2.*ncc3;
+    
+    MB1 = nc3.*ncc1;
+    MB2 = nc3.*ncc2;
+    MB3 = nc3.*ncc3;
     
     b= [MR1' MR2' MR3'; MG1' MG2' MG3'; MB1' MB2' MB3']\(reshape(img_nf_vec', [], 1));
-    illum_1 = b(1:3);
-    illum_2 = b(4:6);
-    illum_3 = b(7:9);
-    
-    illum_1 = illum_1/norm(illum_1);
-    illum_2 = illum_2/norm(illum_2);
-    illum_3 = illum_3/norm(illum_3);
+
+    Illum = [b(1:3),b(4:6),b(7:9)];
+    for i=1:3
+        Illum(:,i) = Illum(:,i)/norm(Illum(:,i));
+    end
     
     im1_new = [];
-    im1_new(1, :) = (alpha'*E(:,:,1)*illum_1)'.*corr(1,:);
-    im1_new(2, :) = (alpha'*E(:,:,2)*illum_1)'.*corr(1,:);
-    im1_new(3, :) = (alpha'*E(:,:,3)*illum_1)'.*corr(1,:);
+    im1_new(1, :) = (alpha'*E(:,:,1)*Illum(:,1))'.*corr(1,:);
+    im1_new(2, :) = (alpha'*E(:,:,2)*Illum(:,1))'.*corr(1,:);
+    im1_new(3, :) = (alpha'*E(:,:,3)*Illum(:,1))'.*corr(1,:);
 
     im1_new = reshape(im1_new', size(im_nf));
 
     im2_new = [];
-    im2_new(1, :) = (alpha'*E(:,:,1)*illum_2)'.*corr(2,:);
-    im2_new(2, :) = (alpha'*E(:,:,2)*illum_2)'.*corr(2,:);
-    im2_new(3, :) = (alpha'*E(:,:,3)*illum_2)'.*corr(2,:);
+    im2_new(1, :) = (alpha'*E(:,:,1)*Illum(:,2))'.*corr(2,:);
+    im2_new(2, :) = (alpha'*E(:,:,2)*Illum(:,2))'.*corr(2,:);
+    im2_new(3, :) = (alpha'*E(:,:,3)*Illum(:,2))'.*corr(2,:);
 
     im2_new = reshape(im2_new', size(im_nf));
 
     im3_new = [];
-    im3_new(1, :) = (alpha'*E(:,:,1)*illum_3)'.*corr(3,:);
-    im3_new(2, :) = (alpha'*E(:,:,2)*illum_3)'.*corr(3,:);
-    im3_new(3, :) = (alpha'*E(:,:,3)*illum_3)'.*corr(3,:);
+    im3_new(1, :) = (alpha'*E(:,:,1)*Illum(:,3))'.*corr(3,:);
+    im3_new(2, :) = (alpha'*E(:,:,2)*Illum(:,3))'.*corr(3,:);
+    im3_new(3, :) = (alpha'*E(:,:,3)*Illum(:,3))'.*corr(3,:);
 
     im3_new = reshape(im3_new', size(im_nf));
     
@@ -369,9 +330,9 @@ else
     results.im2 = im2_new;
     results.im3 = im3_new;
     
-    results.illum1 = illum_1;
-    results.illum2 = illum_2;
-    results.illum3 = illum_3;
+    results.illum1 = Illum(:,1);
+    results.illum2 = Illum(:,2);
+    results.illum3 = Illum(:,3);
     results.coeff = coeff;
 end
 
