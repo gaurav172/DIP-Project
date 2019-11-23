@@ -200,17 +200,24 @@ if Q == 2
     illum = [illum1,illum2]
     L_mat = illum;
     %% reproject the shadings
-    mR1 = (alpha'*E(:,:,1)*illum(:,1))'.*(beta_norm./(1e-10+norm_alpha));
-    mR2 = (alpha'*E(:,:,1)*illum(:,2))'.*(beta_norm./(1e-10+norm_alpha));
-
-    mG1 = (alpha'*E(:,:,2)*illum(:,1))'.*(beta_norm./(1e-10+norm_alpha));
-    mG2 = (alpha'*E(:,:,2)*illum(:,2))'.*(beta_norm./(1e-10+norm_alpha));
-
-    mB1 = (alpha'*E(:,:,3)*illum(:,1))'.*(beta_norm./(1e-10+norm_alpha));
-    mB2 = (alpha'*E(:,:,3)*illum(:,2))'.*(beta_norm./(1e-10+norm_alpha));
-
+%     mR1 = (alpha'*E(:,:,1)*illum(:,1))'.*(beta_norm./(1e-10+norm_alpha));
+%     mR2 = (alpha'*E(:,:,1)*illum(:,2))'.*(beta_norm./(1e-10+norm_alpha));
+    for i=1:2
+        mR(i,:) = (alpha'*E(:,:,1)*illum(:,i))'.*(beta_norm./(1e-10+norm_alpha));
+    end
+%     size(mR)
+%     mG1 = (alpha'*E(:,:,2)*illum(:,1))'.*(beta_norm./(1e-10+norm_alpha));
+%     mG2 = (alpha'*E(:,:,2)*illum(:,2))'.*(beta_norm./(1e-10+norm_alpha));
+    for i=1:2
+        mG(i,:) = (alpha'*E(:,:,2)*illum(:,i))'.*(beta_norm./(1e-10+norm_alpha));
+    end
+%     mB1 = (alpha'*E(:,:,3)*illum(:,1))'.*(beta_norm./(1e-10+norm_alpha));
+%     mB2 = (alpha'*E(:,:,3)*illum(:,2))'.*(beta_norm./(1e-10+norm_alpha));
+    for i=1:2
+        mB(i,:) = (alpha'*E(:,:,3)*illum(:,i))'.*(beta_norm./(1e-10+norm_alpha));
+    end
     for kk = 1:size(img_nf_vec,2)
-        Amat_ = [mR1(kk) mR2(kk); mG1(kk) mG2(kk); mB1(kk) mB2(kk)];
+        Amat_ = [mR(1,kk) mR(2,kk); mG(1,kk) mG(2,kk); mB(1,kk) mB(2,kk)];
         bvec_ = img_nf_vec(:, kk);
         coeff(:, kk) = Amat_\bvec_;
     end
@@ -232,16 +239,26 @@ if Q == 2
 %           MG(i,:)=(alpha'*E(:,:,2))'.*repmat(corr(i,:),[3 1]);
 %           MB(i,:)=(alpha'*E(:,:,3))'.*repmat(corr(i,:),[3 1]);
 %     end
-    MR1 = (alpha'*E(:,:,1))'.*repmat(corr(1,:), [3 1]);
-    MR2 = (alpha'*E(:,:,1))'.*repmat(corr(2,:), [3 1]);
-%     MR = [MR1,MR2];
-%     size(MR)
-    MG1 = (alpha'*E(:,:,2))'.*repmat(corr(1,:), [3 1]);
-    MG2 = (alpha'*E(:,:,2))'.*repmat(corr(2,:), [3 1]);
+    dc1 = repmat(corr(1,:), [3,1]);
+    dc2 = repmat(corr(2,:), [3,1]);   
+    nc1 = alpha'*E(:,:,1)';
+    nc2 = alpha'*E(:,:,2)';
+    nc3 = alpha'*E(:,:,3)';
+%     MR1 = (alpha'*E(:,:,1))'.*repmat(corr(1,:), [3 1]);
+%     MR2 = (alpha'*E(:,:,1))'.*repmat(corr(2,:), [3 1]);
+    MR1 = nc1.*dc1;
+    MR2 = nc1.*dc2;
 
-    MB1 = (alpha'*E(:,:,3))'.*repmat(corr(1,:), [3 1]);
-    MB2 = (alpha'*E(:,:,3))'.*repmat(corr(2,:), [3 1]);
+%     MG1 = (alpha'*E(:,:,2))'.*repmat(corr(1,:), [3 1]);
+%     MG2 = (alpha'*E(:,:,2))'.*repmat(corr(2,:), [3 1]);
+    MG1 = nc2.*dc1;
+    MG2 = nc2.*dc2;
 
+%     MB1 = (alpha'*E(:,:,3))'.*repmat(corr(1,:), [3 1]);
+%     MB2 = (alpha'*E(:,:,3))'.*repmat(corr(2,:), [3 1]);
+    MB1 = nc3.*dc1;
+    MB2 = nc3.*dc2;
+    
     b= [MR1' MR2'; MG1' MG2'; MB1' MB2']\(reshape(img_nf_vec', [], 1));
     illum_1 = b(1:3);
     illum_2 = b(4:6);
