@@ -4,8 +4,8 @@ function [qq_density, density]= calDensityMap(qq, numBins)
 
 % qx = (qq(1, :) +1)./2;
 qx = qq(1, :);
-qx = qx+1
-qx = qx ./ 2
+qx = qx+1;
+qx = qx ./ 2;
 
 % qy = (qq(2, :) +1)./2;
 qy = qq(2, :);
@@ -20,9 +20,9 @@ xgrid = xgrid - qx;
 xgrid = round(1+qx);
 % xgrid = round(1 + qx * (numBins - 1));
 % ygrid = round(1 + qy * (numBins - 1));
-ygrid = qy*numBins
-ygrid = ygrid - qy
-ygrid = round(1+qy)
+ygrid = qy*numBins;
+ygrid = ygrid - qy;
+ygrid = round(1+qy);
 
 idx = sub2ind([numBins numBins], ygrid, xgrid);
 

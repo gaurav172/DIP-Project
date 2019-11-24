@@ -33,8 +33,8 @@ function [UR, UL] = genBase(L, C, R, option)
 
 switch option
     case 'joint'
-        t1 = diag(C*ones(3,1))
-        t2 = R' * t1 * L
+        t1 = diag(C*ones(3,1));
+        t2 = R' * t1 * L;
         [VR, VK, VL] = svds(t2, 3);
         UR = orth(R*VR);
         UL = orth(L*VL);
