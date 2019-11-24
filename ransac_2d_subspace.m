@@ -14,7 +14,7 @@
 
 function [n0, nx] = ransac_2d_subspace(pts, inlier_angle, iter, inliers, M)
     
-    t1 = size(pts,2)
+    t1 = size(pts,2);
     
     if ~exist('inlier_angle', 'var')
         inlier_angle = (1*pi/180);
@@ -34,13 +34,13 @@ function [n0, nx] = ransac_2d_subspace(pts, inlier_angle, iter, inliers, M)
     end
     
     max_inlier = 0;
-    g1 = pts(:,x0(1));
-    g2 = pts(:,x0(2));
 
 
 
     for kk=1:iter
         x0 = randperm(t1, 2);
+        g1 = pts(:,x0(1));
+        g2 = pts(:,x0(2));
         n0 = cross(g1,g2)/norm(cross(g1,g2));
 
         a1 = n0' * pts;

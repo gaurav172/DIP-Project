@@ -46,14 +46,14 @@ function [illum1, illum2, illum3] = est_three_light_coeff(gamma, mask, cfactor)
     g2 = [trix(2); triy(2)];
     g3 = [trix(3); triy(3)];
     
-    gz = size(gamma_proj,2)
-    tp = gamma_proj(1:2,:)
-    t1 = tp - repmat(g1(:), [1, gz])
-    t2 = tp - repmat(g2(:), [1, gz])
-    t3 = tp - repmat(g3(:), [1, gz])
-    t1 = t1.^2
-    t2 = t2.^2
-    t3 = t3.^2
+    gz = size(gamma_proj,2);
+    tp = gamma_proj(1:2,:);
+    t1 = tp - repmat(g1(:), [1, gz]);
+    t2 = tp - repmat(g2(:), [1, gz]);
+    t3 = tp - repmat(g3(:), [1, gz]);
+    t1 = t1.^2;
+    t2 = t2.^2;
+    t3 = t3.^2;
 
     [a1, idd] = min( sum(t1, 1));
     g1 = gamma_proj(:, idd);
@@ -62,7 +62,7 @@ function [illum1, illum2, illum3] = est_three_light_coeff(gamma, mask, cfactor)
     [a3, idd] = min( sum(t3, 1));
     g3 = gamma_proj(:, idd);
     
-
+    R = rot_world2local(center_gamma);
     illum1 = R'*g1;
     illum2 = R'*g2;
     illum3 = R'*g3;
