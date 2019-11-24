@@ -31,7 +31,7 @@
 
 function results = solve_light_sep(im_nf, im_f, mask, opt)
 
-%% initialize the variables
+%% Initializing Varaibles, mask, lambda, cfactor, etc. to solve for Beta Later
 pMask = mask;
 if isfield(opt,'pMask')
     pMask = opt.pMask;
@@ -55,32 +55,34 @@ Q = opt.light_number;
 
 siz = size(im_nf);
 
-%% generate difference image
+%% Generate Pure Flash Image
 D_img = im_f - im_nf;
 D_img(D_img<0) = 0;
 Temp_Mat = repmat(mask,[1 1 3]);
 diff_img = D_img.*Temp_Mat;
 
+% Coefficent based estimation of pure flash Image ,Pure_flash = alpha*Amat
 for i=1:3
     Amat(:,i) = E(:,:,i)*f;
 end
 
-
 diff_img_vec = reshape(diff_img, [], 3);
 diff_img_vec = diff_img_vec';
-img_nf_vec = reshape(im_nf, [], 3)';
-img_nf_vec = img_nf_vec;
+img_nf_vec = reshape(im_nf, [], 3);
+img_nf_vec = img_nf_vec';
 
-%% get alpha image
+%% Solving to Get Alpha Image
 alpha = (Amat');
+% Solving Linear Equation to get Alpha  diff_img_vec = alpha*Amat
 alpha = alpha\diff_img_vec;
-
 if ~isfield(opt, 'shadow_mask')
+%     print("fafa")
     alpha = shadowRM(im_nf, im_f, mask, reshape(alpha', siz), opt.shadow_mask)';
 end
 
 trp = alpha';
 results.alpha = reshape(trp, siz);
+% Normalize alpha
 tx = sum(alpha.^2,1);
 tx = sqrt(tx);
 norm_alpha = tx;
@@ -93,13 +95,14 @@ for kk = 1:size(diff_img_vec, 2)
         fprintf('\b\b\b\b\b\b\b%1.3f \n', 3*kk/prod(size(diff_img_vec)));
     end
     if (mask(kk))
-        %% solve for the beta image
+        %% Solve For Beta Image
         for i=1:3
             Bmat(i,:) = alpha(:,kk)'*E(:,:, i);
         end
+        % Bmat denotes Producto f normalized Alpha and E
         Bmat = Bmat/(1e-10+norm_alpha(kk));
         
-        
+        % Getting Intesity at current Pixel
         nf_intensity = img_nf_vec(:, kk);
         num_1 = Bmat'*Bmat;
         num_2 = lambda*eye(3);
@@ -110,11 +113,14 @@ for kk = 1:size(diff_img_vec, 2)
         else
             z = 1;
         end
+        % Solving Linear Equation to get beta vectors
         beta(:,kk) = (num_1+z*num_2)\deno;
         if sum(isnan(beta(:, kk)))
             beta(:, kk) = zeros(3, 1);
         end
-        beta_norm(kk) = norm(beta(:,kk));  
+        beta_norm(kk) = norm(beta(:,kk)); 
+        % Inserting Beta(p)/norm(Beta(P)) in set G as described in the
+        % Paper
         gamma(:, kk) = beta(:,kk)/(1e-10+beta_norm(kk));
     else
         beta(:, kk) = zeros(3, 1);
@@ -146,15 +152,15 @@ results.beta_norm = reshape(beta_norm', siz(1:2));
 results.gamma = reshape(gamma', siz);
 
 
-%% estimated the illumination coefficients
+%% Estiamting Illumination Coefficients.
 mask_t = mask & pMask;
 if Q == 2
-    %% Two lights case using ransac
+    %% Get Illumination coefficients of two light sources using RANSAC
     [illum1,illum2] = est_two_light_coeff(gamma, mask_t, cfactor);
     illum = [illum1,illum2]
     L_mat = illum;
-    %% reproject the shadings
-
+    %% Get the shadings
+    
     for i=1:2
         mR(i,:) = (alpha'*E(:,:,1)*illum(:,i))'.*(beta_norm./(1e-10+norm_alpha));
     end
@@ -166,13 +172,17 @@ if Q == 2
     for i=1:2
         mB(i,:) = (alpha'*E(:,:,3)*illum(:,i))'.*(beta_norm./(1e-10+norm_alpha));
     end
+    
     for kk = 1:size(img_nf_vec,2)
         Amat_ = [mR(1,kk) mR(2,kk); mG(1,kk) mG(2,kk); mB(1,kk) mB(2,kk)];
         bvec_ = img_nf_vec(:, kk);
+        % Estiamte Zi(p) , Relative shading induced by ith source at pixel kk by solving a linear equation.
         coeff(:, kk) = Amat_\bvec_;
     end
 
 %%
+%     size(coeff)
+%     size(coeff)
     for i=1:2
         corr(i,:) = coeff(i,:).*beta_norm./(1e-10+norm_alpha);
     end
@@ -192,7 +202,6 @@ if Q == 2
 
     MB1 = nc3.*dc1;
     MB2 = nc3.*dc2;
-
     b= [MR1' MR2'; MG1' MG2'; MB1' MB2']\(reshape(img_nf_vec', [], 1));
 
     Illum_n = [b(1:3),b(4:6)];
@@ -213,7 +222,7 @@ if Q == 2
 
     im2_new = reshape(im2_new', size(im_nf));
 
-
+% White Balanced Images.
     im1_wb = [];
     im1_wb(1, :) = (alpha'*E(:,:,1)*f)'.*corr(1,:);
     im1_wb(2, :) = (alpha'*E(:,:,2)*f)'.*corr(1,:);
@@ -233,7 +242,7 @@ if Q == 2
     results.im1_wb = im1_wb;
     results.im2_wb = im2_wb;
     results.coeff = coeff;
-%% Three lights case using ransac
+%% Three Light Sources are Present
 else 
     [illum1, illum2, illum3] = est_three_light_coeff(gamma, mask_t, cfactor);
     L_mat = [illum1 illum2 illum3];
@@ -243,7 +252,7 @@ else
     
     illum1 = L_mat(:, 1); illum2 = L_mat(:, 2); illum3 = L_mat(:, 3);
     Illum = [illum1,illum2,illum3];
-    
+    % Get Shadings for each color
     for i=1:3
         mR(i,:) = (alpha'*E(:,:,1)*Illum(:,i))'.*(beta_norm./(1e-10+norm_alpha));
     end
@@ -261,6 +270,7 @@ else
     for kk = 1:size(img_nf_vec,2)
         Amat_ = [mR(1,kk) mR(2,kk) mR(3,kk); mG(1,kk) mG(2,kk) mG(3,kk); mB(1,kk) mB(2,kk) mB(3,kk)];
         bvec_ = img_nf_vec(:, kk);
+        % Get relative shading Zi(kk) at pixel kk
         coeff(:, kk) = Amat_\bvec_;
     end    
         
@@ -269,6 +279,7 @@ else
         corr(i,:) = coeff(i,:).*beta_norm./(1e-10+norm_alpha);
     end
     %%
+    
     nc1 = (alpha'*E(:,:,1))';
     nc2 = (alpha'*E(:,:,2))';
     nc3 = (alpha'*E(:,:,3))';
@@ -276,6 +287,7 @@ else
     ncc1 = repmat(corr(1,:), [3 1]);
     ncc2 = repmat(corr(2,:), [3 1]);
     ncc3 = repmat(corr(3,:), [3 1]);
+    
     
     MR1 = nc1.*ncc1;
     MR2 = nc1.*ncc2;
