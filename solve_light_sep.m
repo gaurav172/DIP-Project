@@ -14,9 +14,8 @@
 %    4. f: the lighting coefficients for the flash lighting 
 %    optional 
 %    5. pMask: the mask for the pixels with purely colors
-%    6. lambda: the weights for the ridge regression solver for beta
-%    7. shadow_mask: optional. to mask the flash shdows
-%    8. cutoff: the threshold values in thresholding the histogram
+%    6. shadow_mask: optional. to mask the flash shdows
+%    7. cutoff: the threshold values in thresholding the histogram
 
 %   
 
@@ -99,7 +98,7 @@ for kk = 1:size(diff_img_vec, 2)
         for i=1:3
             Bmat(i,:) = alpha(:,kk)'*E(:,:, i);
         end
-        % Bmat denotes Producto f normalized Alpha and E
+        % Bmat denotes Product of normalized Alpha and E
         Bmat = Bmat/(1e-10+norm_alpha(kk));
         
         % Getting Intesity at current Pixel
@@ -186,7 +185,7 @@ if Q == 2
     for i=1:2
         corr(i,:) = coeff(i,:).*beta_norm./(1e-10+norm_alpha);
     end
-
+    % Solving for Illumination coefficients
     dc1 = repmat(corr(1,:), [3,1]);
     dc2 = repmat(corr(2,:), [3,1]);   
     nc1 = (alpha'*E(:,:,1))';
@@ -279,7 +278,7 @@ else
         corr(i,:) = coeff(i,:).*beta_norm./(1e-10+norm_alpha);
     end
     %%
-    
+    % Solving for Illumination Coefficients.
     nc1 = (alpha'*E(:,:,1))';
     nc2 = (alpha'*E(:,:,2))';
     nc3 = (alpha'*E(:,:,3))';
