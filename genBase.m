@@ -31,55 +31,55 @@
 
 function [UR, UL] = genBase(L, C, R, option)
 
-switch option
-    case 'joint'
-        t1 = diag(C*ones(3,1));
-        t2 = R' * t1 * L;
-        [VR, VK, VL] = svds(t2, 3);
-        UR = orth(R*VR);
-        UL = orth(L*VL);
-          
-    case 'pca'
+    switch option
+        case 'joint'
+            t1 = diag(C*ones(3,1));
+            t2 = R' * t1 * L;
+            [VR, VK, VL] = svds(t2, 3);
+            UR = orth(R*VR);
+            UL = orth(L*VL);
 
-        [UR, SigmaR, VR] = svds(R, 3);
-        
-        [UL, SigmaL, VL] = svds(L, 3);
-        UR = orth(UR);
-        UL = orth(UL);
-    case 'wpca'
-        a1 = R.*repmat((C(:, 1)),1,size(R,2));
-        a2 = R.*repmat((C(:, 2)),1,size(R,2));
-        a3 = R.*repmat((C(:, 3)),1,size(R,2));
-        a4 = L.*repmat((C(:, 1)),1,size(L,2));
-        a5 = L.*repmat((C(:, 2)),1,size(L,2));
-        a6 = L.*repmat((C(:, 3)),1,size(L,2));
-        R_total = [a1,a2,a3];
-        L_total = [a4,a5,a6];
-        [UR, UK, UP] = svds(R_total, 3);       
-        [UL, UK, UP] = svds(L_total, 3);   
+        case 'pca'
 
-        
-        UR = orth(UR);
-        UL = orth(UL);
-    case 'wpca1'
-        a1 = R.*repmat((C(:, 1)), 1, size(R, 2));
-        a2 = R.*repmat((C(:, 2)), 1, size(R, 2));
-        a3 = R.*repmat((C(:, 3)), 1, size(R, 2));
-        a4 = L.*repmat((C(:, 1)), 1, size(L, 2));
-        a5 = L.*repmat((C(:, 2)), 1, size(L, 2));
-        a6 = L.*repmat((C(:, 3)), 1, size(L, 2));
+            [UR, SigmaR, VR] = svds(R, 3);
 
-        [UR(:, 1),U11,U12] = svds(a1,1);
-        [UR(:, 2),U21,U22] = svds(a2,1);
-        [UR(:, 3),U31,U32] = svds(a3,1);
+            [UL, SigmaL, VL] = svds(L, 3);
+            UR = orth(UR);
+            UL = orth(UL);
+        case 'wpca'
+            a1 = R.*repmat((C(:, 1)),1,size(R,2));
+            a2 = R.*repmat((C(:, 2)),1,size(R,2));
+            a3 = R.*repmat((C(:, 3)),1,size(R,2));
+            a4 = L.*repmat((C(:, 1)),1,size(L,2));
+            a5 = L.*repmat((C(:, 2)),1,size(L,2));
+            a6 = L.*repmat((C(:, 3)),1,size(L,2));
+            R_total = [a1,a2,a3];
+            L_total = [a4,a5,a6];
+            [UR, UK, UP] = svds(R_total, 3);       
+            [UL, UK, UP] = svds(L_total, 3);   
 
-        [UL(:, 1),U41,U42] = svds(a4,1);
-        [UL(:, 2),U51,U52] = svds(a5,1);
-        [UL(:, 3),U61,U62] = svds(a6,1);
-        
-        UR = orth(UR);
-        UL = orth(UL);
-end
+
+            UR = orth(UR);
+            UL = orth(UL);
+        case 'wpca1'
+            a1 = R.*repmat((C(:, 1)), 1, size(R, 2));
+            a2 = R.*repmat((C(:, 2)), 1, size(R, 2));
+            a3 = R.*repmat((C(:, 3)), 1, size(R, 2));
+            a4 = L.*repmat((C(:, 1)), 1, size(L, 2));
+            a5 = L.*repmat((C(:, 2)), 1, size(L, 2));
+            a6 = L.*repmat((C(:, 3)), 1, size(L, 2));
+
+            [UR(:, 1),U11,U12] = svds(a1,1);
+            [UR(:, 2),U21,U22] = svds(a2,1);
+            [UR(:, 3),U31,U32] = svds(a3,1);
+
+            [UL(:, 1),U41,U42] = svds(a4,1);
+            [UL(:, 2),U51,U52] = svds(a5,1);
+            [UL(:, 3),U61,U62] = svds(a6,1);
+
+            UR = orth(UR);
+            UL = orth(UL);
+    end
 
 
 end
